@@ -1,9 +1,12 @@
 ﻿using APILojaEstoque.Context;
 using APILojaEstoque.Interfaces;
+using APILojaEstoque.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Xml.Linq;
+
 
 namespace APILojaEstoque.Controllers
 {
@@ -11,14 +14,12 @@ namespace APILojaEstoque.Controllers
     [ApiController]
     public class GenericController<T> : ControllerBase where T : class, IEntidade
     {
-        private readonly APILojaEstoqueContext _context;
-        private readonly DbSet<T> _dbSet;
+        private readonly IGenericRepository<T> _repository;
         private readonly ILogger<GenericController<T>> _logger;
 
-        public GenericController(APILojaEstoqueContext context, ILogger<GenericController<T>> logger)
+        public GenericController(IGenericRepository<T> repository, ILogger<GenericController<T>> logger)
         {
-            _context = context;
-            _dbSet = _context.Set<T>();
+            _repository = repository;
             _logger = logger;
         }
 
@@ -26,124 +27,71 @@ namespace APILojaEstoque.Controllers
 
         public async Task<ActionResult<IEnumerable<T>>> GetAllAsync()
         {
-            _logger.LogInformation("GET → Buscando todos os registros de {Entity}", typeof(T).Name);
-            var entities = await _dbSet.AsNoTracking().ToListAsync();
-
+            var entities = await _repository.GetAllAsync();
             return Ok(entities);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<T>> GetByIdAsync(int idGet)
+        public async Task<ActionResult<T>> GetByIdAsync(int id)
         {
-            _logger.LogInformation("GET → Buscando {Entity} com ID = {Id}", typeof(T).Name, idGet);
-            var entity = await _dbSet.FindAsync(idGet);
-            if (entity == null) {
-                _logger.LogWarning("GET → {Entity} com ID = {Id} não encontrado", typeof(T).Name, idGet);
-                return NotFound($"Id:'{idGet}' Não encontrado no sistema");
-            }
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null) return NotFound();
             return Ok(entity);
         }
 
         [HttpGet("Busca-Por-Nome")]
 
-        public async Task<ActionResult<IEnumerable<T>>> GetByNameAsync([FromQuery] string nameGet)
+        public async Task<ActionResult<IEnumerable<T>>> GetByNameAsync([FromQuery] string name)
         {
-            _logger.LogInformation("GET → Buscando {entities} com nome = {nameGet}", typeof(T).Name, nameGet);
-            var entities = await _dbSet
-                .AsNoTracking()
-                .Where(e => EF.Property<string>(e, "Nome").Contains(nameGet))
-                .ToListAsync();
-
-            if (entities == null || entities.Count == 0) {
-                _logger.LogWarning("GET → {Entity} com nome = {nameGet} não encontrado", typeof(T).Name, nameGet);
-                return NotFound($"Nenhum resultado encontrado com o nome '{nameGet}'.");
-            }
-
-            return Ok(entities);
+            var entities = await _repository.FindByNameAsync(name);
+            return entities.Any() ? Ok(entities) : NotFound();
         }
 
         [HttpPost]
 
         public async Task<ActionResult<T>> PostAsync([FromBody] T entity)
         {
-            await _dbSet.AddAsync(entity);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-
-                var id = typeof(T).GetProperty("Id")?.GetValue(entity);
-                _logger.LogInformation("POST → Novo {Entity} criado com ID = {Id}", typeof(T).Name, id);
-
-                return Created($"{Request.Path}/{id}", entity);
-            }
-            catch (DbUpdateException dbEx)
-            {
-                var innerMessage = dbEx.InnerException?.Message ?? "Sem mensagem interna";
-
-                return StatusCode(500, new
-                {
-                    Message = "Erro ao salvar no banco.",
-                    ExceptionMessage = dbEx.Message,
-                    InnerExceptionMessage = innerMessage
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { ex.Message });
-            }
+            await _repository.AddAsync(entity);
+            return Ok(entity);
         }
 
-        [HttpPut("{IdPut:int}")]
+        [HttpPut("{id:int}")]
 
-        public async Task<ActionResult<T>> PutAsync(int IdPut, [FromBody] T entity)
+        public async Task<ActionResult<T>> PutAsync(int id, [FromBody] T entity)
         {
-            if (IdPut != entity.Id)
-            {
-                _logger.LogWarning("PUT → Tentativa de atualizar {Entity} com ID inconsistente (IdPut = " +
-                    "{IdPut}, entity.Id = {EntityId})", typeof(T).Name, IdPut, entity.Id);
-                return BadRequest($"Id:'{IdPut}' Não encontrado no sistema");
-            }
-            _context.Entry(entity).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("PUT → {Entity} com ID = {IdPut} atualizado", typeof(T).Name, IdPut);
+            if (id != entity.Id) return BadRequest();
+            await _repository.UpdateAsync(entity);
             return Ok(entity);
         }
 
         [HttpPut("Editar-Por-Nome")]
         public async Task<ActionResult<T>> PutByName([FromQuery] string name, [FromBody] T entity)
         {
-            var entityBanco = await _dbSet.FirstOrDefaultAsync(e => EF.Property<string>(e, "Nome") == name);
+            var entityBanco = await _repository.GetByNameAsync(name);
 
-            if (entityBanco == null) {
+            if (entityBanco == null)
+            {
                 _logger.LogWarning("PUT → {Entity} com nome = '{Name}' não encontrado", typeof(T).Name, name);
-                return NotFound($"Nome '{name}' não encontrado no sistema..."); }
+                return NotFound($"Nome '{name}' não encontrado no sistema...");
+            }
 
             entity.Id = entityBanco.Id;
 
-            _context.Entry(entity).State = EntityState.Modified;
+            await _repository.UpdateAsync(entity);
 
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("PUT → {Entity} com nome = '{Name}' atualizado com sucesso " +
-                "(ID = {Id})", typeof(T).Name, name, entity.Id);
+            _logger.LogInformation("PUT → {Entity} com nome = '{Name}' atualizado com sucesso (ID = {Id})",
+                typeof(T).Name, name, entity.Id);
+
             return Ok(entity);
         }
 
-        [HttpDelete("{idDelete:int}")]
+        [HttpDelete("{id:int}")]
 
-        public async Task <IActionResult> DeleteAsync (int idDelete)
+        public async Task <IActionResult> DeleteAsync (int id)
         {
-            var entity = await _dbSet.FindAsync(idDelete);
-
-            if (entity == null)
-            {
-                _logger.LogWarning("DELETE → {Entity} com ID = " +
-                    "{IdDelete} não encontrado", typeof(T).Name, idDelete);
-                return NotFound($"Id:'{idDelete}' Não foi encontrado no sistema...");
-            }
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("DELETE → {Entity} com ID = {IdDelete} removido", typeof(T).Name, idDelete);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null) return NotFound();
+            await _repository.DeleteAsync(entity);
             return NoContent();
         }
 
@@ -151,20 +99,19 @@ namespace APILojaEstoque.Controllers
 
         public async Task <IActionResult> DeleteAsync([FromQuery] string name)
         {
-            _logger.LogInformation("DELETE → Buscando {Entity} com nome = " +
-                "'{Name}' para exclusão", typeof(T).Name, name);
-            var entity = await _dbSet.FirstOrDefaultAsync(e => EF.Property<string>(e, "Nome") == name);
+            _logger.LogInformation("DELETE → Buscando {Entity} com nome = '{Name}' para exclusão", typeof(T).Name, name);
 
+            var entity = await _repository.GetByNameAsync(name);
             if (entity == null)
             {
                 _logger.LogWarning("DELETE → {Entity} com nome = '{Name}' não encontrado", typeof(T).Name, name);
                 return NotFound($"Nome '{name}' não foi encontrado no sistema.");
             }
 
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("DELETE → {Entity} com nome = '{Name}' " +
-                "removido com sucesso (ID = {Id})", typeof(T).Name, name, entity.Id);
+            await _repository.DeleteAsync(entity);
+
+            _logger.LogInformation("DELETE → {Entity} com nome = '{Name}' removido com sucesso (ID = {Id})",
+                typeof(T).Name, name, entity.Id);
 
             return Ok($"Entidade com nome '{name}' deletada com sucesso.");
         }

@@ -31,16 +31,6 @@ namespace APILojaEstoque.Models
         public DateTime UltimaAtualizacao { get; set; }
         [NotMapped]
         [JsonIgnore]
-        public string Nome
-        {
-            get
-            {
-                return Produto != null ? Produto.Nome : "Estoque sem produto";
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public string Nome => Produto != null ? Produto.Nome : "Estoque sem produto";
     }
 }

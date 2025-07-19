@@ -2,6 +2,7 @@ using APILojaEstoque.Context;
 using APILojaEstoque.Extensions;
 using APILojaEstoque.Filters;
 using APILojaEstoque.Logging;
+using APILojaEstoque.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,8 @@ builder.Services.AddControllers(options =>
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLogggerProviderConfiguration{
     LogLevel = LogLevel.Information
 }));
+
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();
 

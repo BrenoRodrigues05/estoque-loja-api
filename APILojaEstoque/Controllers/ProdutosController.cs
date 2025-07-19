@@ -1,5 +1,6 @@
 ﻿using APILojaEstoque.Context;
 using APILojaEstoque.Models;
+using APILojaEstoque.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,8 +10,8 @@ namespace APILojaEstoque.Controllers
     [ApiController]
     public class ProdutosController : GenericController<Produtos>
     {
-        public ProdutosController(APILojaEstoqueContext context, ILogger<GenericController<Produtos>> logger)
-            : base(context, logger)
+        public ProdutosController(IGenericRepository<Produtos> repository, ILogger<GenericController<Produtos>> logger)
+            : base(repository, logger)
         {
         }
     }
