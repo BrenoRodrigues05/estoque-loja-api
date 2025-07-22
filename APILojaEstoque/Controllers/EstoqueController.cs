@@ -11,8 +11,8 @@ namespace APILojaEstoque.Controllers
     [ApiController]
     public class EstoqueController : GenericController<Estoque>
     {
-        public EstoqueController(IGenericRepository<Estoque> repository, ILogger<GenericController<Estoque>> logger)
-     : base(repository, logger)
+        public EstoqueController(IUnitOfWork unitOfWork, ILogger<GenericController<Estoque>> logger)
+     : base(unitOfWork, logger)
         {
         }
 

@@ -10,8 +10,8 @@ namespace APILojaEstoque.Controllers
     [ApiController]
     public class ProdutosController : GenericController<Produtos>
     {
-        public ProdutosController(IGenericRepository<Produtos> repository, ILogger<GenericController<Produtos>> logger)
-            : base(repository, logger)
+        public ProdutosController(IUnitOfWork unitOfWork, ILogger<GenericController<Produtos>> logger)
+            : base(unitOfWork, logger)
         {
         }
     }

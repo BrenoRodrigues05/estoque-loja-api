@@ -28,7 +28,8 @@ builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLogggerProviderCo
     LogLevel = LogLevel.Information
 }));
 
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), (typeof (GenericRepository<>)));
 
 var app = builder.Build();
 

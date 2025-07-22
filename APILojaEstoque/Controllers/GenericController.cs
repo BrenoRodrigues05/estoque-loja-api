@@ -1,5 +1,6 @@
 ﻿using APILojaEstoque.Context;
 using APILojaEstoque.Interfaces;
+using APILojaEstoque.Models;
 using APILojaEstoque.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +17,19 @@ namespace APILojaEstoque.Controllers
     {
         private readonly IGenericRepository<T> _repository;
         private readonly ILogger<GenericController<T>> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GenericController(IGenericRepository<T> repository, ILogger<GenericController<T>> logger)
+        public GenericController(IUnitOfWork unitOfWork, ILogger<GenericController<T>> logger)
         {
-            _repository = repository;
             _logger = logger;
+            _unitOfWork = unitOfWork;
+
+            _repository = typeof(T).Name switch
+            {
+                nameof(Produtos) => (IGenericRepository<T>)unitOfWork.Produtos,
+                nameof(Estoque) => (IGenericRepository<T>)unitOfWork.Estoque,
+                _ => throw new ArgumentException($"Tipo de entidade '{typeof(T).Name}' não suportado.")
+            };
         }
 
         [HttpGet]
@@ -52,6 +61,7 @@ namespace APILojaEstoque.Controllers
         public async Task<ActionResult<T>> PostAsync([FromBody] T entity)
         {
             await _repository.AddAsync(entity);
+            await _unitOfWork.CommitAsync();
             return Ok(entity);
         }
 
@@ -61,6 +71,9 @@ namespace APILojaEstoque.Controllers
         {
             if (id != entity.Id) return BadRequest();
             await _repository.UpdateAsync(entity);
+            await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation("PUT → {Entity} atualizado com sucesso (ID = {Id})", typeof(T).Name, id);
             return Ok(entity);
         }
 
@@ -78,6 +91,7 @@ namespace APILojaEstoque.Controllers
             entity.Id = entityBanco.Id;
 
             await _repository.UpdateAsync(entity);
+            await _unitOfWork.CommitAsync();
 
             _logger.LogInformation("PUT → {Entity} com nome = '{Name}' atualizado com sucesso (ID = {Id})",
                 typeof(T).Name, name, entity.Id);
@@ -92,6 +106,10 @@ namespace APILojaEstoque.Controllers
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null) return NotFound();
             await _repository.DeleteAsync(entity);
+            await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation("DELETE → {Entity} removido com sucesso (ID = {Id})", typeof(T).Name, id);
+
             return NoContent();
         }
 
@@ -109,6 +127,7 @@ namespace APILojaEstoque.Controllers
             }
 
             await _repository.DeleteAsync(entity);
+            await _unitOfWork.CommitAsync();
 
             _logger.LogInformation("DELETE → {Entity} com nome = '{Name}' removido com sucesso (ID = {Id})",
                 typeof(T).Name, name, entity.Id);

@@ -20,7 +20,7 @@ namespace APILojaEstoque.Logging
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            
         }
     }
 }
