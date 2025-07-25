@@ -1,4 +1,5 @@
 using APILojaEstoque.Context;
+using APILojaEstoque.DTOs.Mappings;
 using APILojaEstoque.Extensions;
 using APILojaEstoque.Filters;
 using APILojaEstoque.Logging;
@@ -30,6 +31,7 @@ builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLogggerProviderCo
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), (typeof (GenericRepository<>)));
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 
