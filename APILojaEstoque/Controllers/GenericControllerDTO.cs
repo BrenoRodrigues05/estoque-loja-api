@@ -3,6 +3,7 @@ using APILojaEstoque.Models;
 using APILojaEstoque.Repositories;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APILojaEstoque.Controllers
@@ -10,7 +11,7 @@ namespace APILojaEstoque.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class GenericControllerDTO<TEntity, TReadDto, TCreateDto, TUpdateDto> : ControllerBase
-        where TEntity : class, IEntidade
+        where TEntity : class, IEntidade where TUpdateDto : class
     {
         protected readonly IGenericRepository<TEntity> _repository;
         protected readonly IUnitOfWork _unitOfWork;
@@ -93,6 +94,52 @@ namespace APILojaEstoque.Controllers
 
             _logger.LogInformation("PUT → {Entity} atualizado com " +
                 "sucesso (ID = {Id})", typeof(TEntity).Name, id);
+            return Ok(_mapper.Map<TReadDto>(entity));
+        }
+
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchAsync(int id, [FromBody] JsonPatchDocument<TUpdateDto> patchDoc) 
+        {
+            _logger.LogInformation("PATCH → Atualizando parcialmente {Entity} com ID = {Id}",
+                typeof(TEntity).Name, id);
+
+            if (patchDoc == null)
+                return BadRequest("Documento de patch não pode ser nulo.");
+
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+            {
+                _logger.LogWarning("PATCH → {Entity} com ID = {Id} não encontrado", typeof(TEntity).Name, id);
+                return NotFound();
+            }
+
+            var dto = _mapper.Map<TUpdateDto>(entity);
+
+            patchDoc.ApplyTo(dto, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("PATCH → Dados inválidos para atualização de {Entity} com ID = {Id}", 
+                    typeof(TEntity).Name, id);
+                return BadRequest(ModelState);
+            }
+
+            TryValidateModel(dto);
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("PATCH → Validação falhou após aplicar patch para {Entity} com ID = {Id}",
+                    typeof(TEntity).Name, id);
+                return BadRequest(ModelState);
+            }
+
+            _mapper.Map(dto, entity);
+            await _repository.UpdateAsync(entity);
+            await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation("PATCH → {Entity} atualizado com sucesso (ID = {Id})", 
+                typeof(TEntity).Name, id);
+
             return Ok(_mapper.Map<TReadDto>(entity));
         }
 

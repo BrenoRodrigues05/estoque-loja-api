@@ -7,14 +7,14 @@ namespace APILojaEstoque.DTOs.Mappings
     {
        public MappingProfile()
         {
-            CreateMap<Produtos, ProdutoReadDTO>();
-            CreateMap<ProdutoCreateDTO, Produtos>();
-            CreateMap<ProdutoUpdateDTO, Produtos>();
+            CreateMap<Produtos, ProdutoReadDTO>().ReverseMap();
+            CreateMap<ProdutoCreateDTO, Produtos>().ReverseMap();
+            CreateMap<ProdutoUpdateDTO, Produtos>().ReverseMap();
 
             CreateMap<Estoque, EstoqueReadDTO>()
-           .ForMember(dest => dest.ProdutoNome, opt => opt.MapFrom(src => src.Produto.Nome));
-            CreateMap<EstoqueCreateDTO, Estoque>();
-            CreateMap<EstoqueUpdateDTO, Estoque>();
+           .ForMember(dest => dest.ProdutoNome, opt => opt.MapFrom(src => src.Produto.Nome)).ReverseMap();
+            CreateMap<EstoqueCreateDTO, Estoque>().ReverseMap();
+            CreateMap<EstoqueUpdateDTO, Estoque>().ReverseMap();
 
         }
     }

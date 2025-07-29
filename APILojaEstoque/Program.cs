@@ -23,7 +23,7 @@ builder.Services.AddDbContext<APILojaEstoqueContext> (options=> options.UseMySql
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<APILojaEstoque.Filters.APILoggingFilter>();
-});
+}).AddNewtonsoftJson();
 
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLogggerProviderConfiguration{
     LogLevel = LogLevel.Information
