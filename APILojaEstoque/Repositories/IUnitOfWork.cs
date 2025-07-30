@@ -7,6 +7,7 @@ namespace APILojaEstoque.Repositories
         IGenericRepository<Produtos> Produtos { get; }
         IGenericRepository<Estoque> Estoque { get; }
         Task<int> CommitAsync();
+
     }   
     
 }

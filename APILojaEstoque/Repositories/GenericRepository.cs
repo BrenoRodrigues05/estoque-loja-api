@@ -53,5 +53,10 @@ namespace APILojaEstoque.Repositories
         {
             return await _dbSet.FirstOrDefaultAsync(e => EF.Property<string>(e, "Nome") == name);
         }
+
+        public IQueryable<T> GetAll()
+        {
+            return _dbSet.AsNoTracking();
+        }
     }
 }

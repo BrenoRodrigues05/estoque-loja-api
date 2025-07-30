@@ -1,5 +1,6 @@
 ﻿using APILojaEstoque.Interfaces;
 using APILojaEstoque.Models;
+using APILojaEstoque.Pagination;
 using APILojaEstoque.Repositories;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
@@ -64,6 +65,25 @@ namespace APILojaEstoque.Controllers
             }
 
             return Ok(_mapper.Map<TReadDto>(entity));
+        }
+
+        [HttpGet("paginado")]
+        public async Task<ActionResult<PagedResult<TReadDto>>> GetPagedAsync(
+        [FromQuery] int pageNumber = 1,
+         [FromQuery] int pageSize = 10)
+        {
+            _logger.LogInformation("GET → Buscando {Entity} paginados: página {Page}, tamanho {Size}",
+                typeof(TEntity).Name, pageNumber, pageSize);
+
+            if (_repository.GetAll == null)
+                return BadRequest("Repositório não suporta consulta IQueryable.");
+
+            var query = _repository.GetAll();
+
+            var pagedResult = await PaginationHelper.CreateAsync<TEntity, TReadDto>(
+                query, pageNumber, pageSize, _mapper);
+
+            return Ok(pagedResult);
         }
 
         [HttpPost]

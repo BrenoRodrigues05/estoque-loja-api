@@ -9,6 +9,8 @@
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task<T?> GetByNameAsync(string name);
-       
+
+        IQueryable<T> GetAll();
+
     }
 }
