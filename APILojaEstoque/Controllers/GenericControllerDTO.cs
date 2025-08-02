@@ -1,4 +1,5 @@
-﻿using APILojaEstoque.Interfaces;
+﻿using APILojaEstoque.DTOs;
+using APILojaEstoque.Interfaces;
 using APILojaEstoque.Models;
 using APILojaEstoque.Pagination;
 using APILojaEstoque.Repositories;
@@ -84,6 +85,29 @@ namespace APILojaEstoque.Controllers
                 query, pageNumber, pageSize, _mapper);
 
             return Ok(pagedResult);
+        }
+
+        [HttpGet("Busca-Por-Nome")]
+
+        public async Task<ActionResult<PagedResult<TReadDto>>> GetByNomeAsync([FromQuery] FiltroNome filtroNome)
+        {
+            _logger.LogInformation("GET → Buscando {Entity} filtrados por nome: {Nome}", typeof(TEntity).Name, 
+                filtroNome.Nome);
+
+            if (!(_repository is IGenericRepository<TEntity> genericRepo))
+                return BadRequest("Repositório não suporta busca por nome.");
+
+            var pagedResult = await genericRepo.GetFiltroNomeAsync(filtroNome);
+
+            var mappedResult = new PagedResult<TReadDto>
+            {
+                Items = _mapper.Map<IEnumerable<TReadDto>>(pagedResult.Items),
+                PageNumber = pagedResult.PageNumber,
+                PageSize = pagedResult.PageSize,
+                TotalItems = pagedResult.TotalItems
+            };
+
+            return Ok(mappedResult);
         }
 
         [HttpPost]

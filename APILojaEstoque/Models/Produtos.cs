@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 namespace APILojaEstoque.Models
 {
     [Table("Produtos")]
-    public class Produtos : IEntidade
+    public class Produtos : IEntidade, ITemPreco
     {
         [Key]
         

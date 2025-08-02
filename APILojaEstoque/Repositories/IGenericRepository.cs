@@ -1,4 +1,6 @@
-﻿namespace APILojaEstoque.Repositories
+﻿using APILojaEstoque.Pagination;
+
+namespace APILojaEstoque.Repositories
 {
     public interface IGenericRepository <T>  where T : class
     {
@@ -11,6 +13,11 @@
         Task<T?> GetByNameAsync(string name);
 
         IQueryable<T> GetAll();
+
+        Task<PagedResult<T>> GetFiltrosPrecoAsync(FiltroPreco filtroPrecoParams);
+
+        Task <PagedResult<T>> GetFiltroNomeAsync(FiltroNome filtroNomeParams);
+
 
     }
 }
