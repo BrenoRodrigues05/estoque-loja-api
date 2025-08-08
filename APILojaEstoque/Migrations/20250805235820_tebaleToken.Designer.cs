@@ -3,6 +3,7 @@ using System;
 using APILojaEstoque.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APILojaEstoque.Migrations
 {
     [DbContext(typeof(APILojaEstoqueContext))]
-    partial class APILojaEstoqueContextModelSnapshot : ModelSnapshot
+    [Migration("20250805235820_tebaleToken")]
+    partial class tebaleToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

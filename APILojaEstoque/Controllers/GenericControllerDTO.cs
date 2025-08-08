@@ -4,6 +4,7 @@ using APILojaEstoque.Models;
 using APILojaEstoque.Pagination;
 using APILojaEstoque.Repositories;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +39,7 @@ namespace APILojaEstoque.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<TReadDto>>> GetAllAsync()
         {
             _logger.LogInformation("GET → Buscando todos os " +
