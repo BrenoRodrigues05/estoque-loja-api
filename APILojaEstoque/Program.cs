@@ -6,6 +6,7 @@ using APILojaEstoque.Logging;
 using APILojaEstoque.Models;
 using APILojaEstoque.Repositories;
 using APILojaEstoque.Services;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -75,6 +76,17 @@ builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLogggerProviderCo
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+builder.Services.AddApiVersioning(options=>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 
 // Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()

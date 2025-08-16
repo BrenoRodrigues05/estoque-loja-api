@@ -3,6 +3,7 @@ using APILojaEstoque.DTOs;
 using APILojaEstoque.Models;
 using APILojaEstoque.Pagination;
 using APILojaEstoque.Repositories;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace APILojaEstoque.Controllers
 {
     [Route("api/[controller]")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class ProdutosController : GenericControllerDTO<
     Produtos,

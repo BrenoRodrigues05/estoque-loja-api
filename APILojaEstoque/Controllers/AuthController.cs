@@ -1,6 +1,7 @@
 ﻿using APILojaEstoque.DTOs;
 using APILojaEstoque.Models;
 using APILojaEstoque.Services;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ using System.Security.Claims;
 namespace APILojaEstoque.Controllers
 {
     [Route("api/[controller]")]
+    [ApiVersion ("1.0")]
     [ApiController]
     public class AuthController : ControllerBase
     {
